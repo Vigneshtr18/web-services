@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Quiz Game</title>
+    <style>
+        :root {
+            --primary: #46178f;
+            --secondary: #ffcc00;
+            --background: #f5f5f5;
+            --text: #333333;
+            --correct: #4caf50;
+            --incorrect: #f44336;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .intro-screen, .quiz-container, .results-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .intro-screen {
+            display: block;
+        }
+        
+        .quiz-container, .results-container {
+            display: none;
+        }
+        
+        .question-count {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        .question {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+        
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        
+        .option {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 80px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        .option::before {
+            content: attr(data-option);
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: white;
+            color: var(--primary);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            height: 10px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: var(--secondary);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .timer {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        button:hover {
+            background-color: #3a1475;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .start-btn {
+            font-size: 1.3rem;
+            padding: 15px 40px;
+            margin-top: 30px;
+        }
+        
+        .next-btn {
+            display: none;
+        }
+        
+        .results-container h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+        
+        .score {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--secondary);
+            margin: 20px 0;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+        }
+        
+        .summary {
+            width: 100%;
+            text-align: left;
+            margin-top: 30px;
+        }
+        
+        .summary-item {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .summary-question {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .user-answer.correct {
+            color: var(--correct);
+        }
+        
+        .user-answer.incorrect {
+            color: var(--incorrect);
+        }
+        
+        .correct-answer {
+            color: var(--correct);
+            font-weight: bold;
+        }
+        
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            color: #666;
+        }
+        
+        .restart-btn {
+            background-color: var(--secondary);
+            color: #333;
+        }
+        
+        .restart-btn:hover {
+            background-color: #e6b800;
+        }
+        
+        @media (max-width: 768px) {
+            .options {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .question {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Interactive Quiz Game</h1>
+        <p>Test your knowledge with this fun quiz!</p>
+    </header>
+    
+    <div class="container">
+        <div class="intro-screen">
+            <h2>Welcome to the Quiz!</h2>
+            <p>This quiz contains 20 multiple-choice questions about Web Services and XML.</p>
+            <p>You'll have 30 seconds per question. Answers will be shown at the end.</p>
+            <p>Good luck!</p>
+            <button class="start-btn">Start Quiz</button>
+        </div>
+        
+        <div class="quiz-container">
+            <div class="progress-container">
+                <div class="progress-bar"></div>
+            </div>
+            
+            <div class="question-count">Question 1 of 20</div>
+            
+            <div class="timer">30s</div>
+            
+            <div class="question">What is the primary purpose of web services?</div>
+            
+            <div class="options">
+                <div class="option" data-option="A" data-value="a">To design user interfaces</div>
+                <div class="option" data-option="B" data-value="b">To enable machine-to-machine communication over a network</div>
+                <div class="option" data-option="C" data-value="c">To replace traditional databases</div>
+                <div class="option" data-option="D" data-value="d">To develop operating systems</div>
+            </div>
+            
+            <button class="next-btn">Next Question</button>
+        </div>
+        
+        <div class="results-container">
+            <h2>Quiz Completed!</h2>
+            <div class="score">0%</div>
+            <p>You scored <span class="correct-count">0</span> out of 20</p>
+            
+            <div class="summary">
+                <h3>Question Review:</h3>
+                <!-- Summary items will be added by JavaScript -->
+            </div>
+            
+            <button class="restart-btn">Restart Quiz</button>
+        </div>
+    </div>
+    
+    <script>
+        // Quiz questions data
+        const quizQuestions = [
+            {
+                question: "What is the primary purpose of web services?",
+                options: [
+                    "To design user interfaces",
+                    "To enable machine-to-machine communication over a network",
+                    "To replace traditional databases",
+                    "To develop operating systems"
+                ],
+                correct: "b",
+                explanation: "Web services facilitate interoperability between systems using standardized protocols (e.g., XML, HTTP)."
+            },
+            {
+                question: "Which architecture introduced 'dumb terminals'?",
+                options: [
+                    "Client-Server Architecture",
+                    "Mainframe Architecture",
+                    "Distributed Architecture",
+                    "Service-Oriented Architecture"
+                ],
+                correct: "b",
+                explanation: "Mainframe architecture relied on centralized processing with dumb terminals for input/output."
+            },
+            {
+                question: "What does SOA stand for?",
+                options: [
+                    "Software-Oriented Applications",
+                    "System Optimization Architecture",
+                    "Service-Oriented Architecture",
+                    "Server Operations Agreement"
+                ],
+                correct: "c",
+                explanation: "SOA (Service-Oriented Architecture) structures software as reusable services."
+            },
+            {
+                question: "Which XML component defines data validation rules?",
+                options: [
+                    "XML Syntax",
+                    "XML Elements",
+                    "DTD or XSD",
+                    "XML Tags"
+                ],
+                correct: "c",
+                explanation: "DTD (Document Type Definition) or XSD (XML Schema Definition) validates XML structure/content."
+            },
+            {
+                question: "Mobile clients in client-server progression are characterized by:",
+                options: [
+                    "High processing power and storage",
+                    "Dependency on mainframes",
+                    "Limited resources and connectivity",
+                    "Exclusive use of wired networks"
+                ],
+                correct: "c",
+                explanation: "Mobile clients prioritize lightweight operations and intermittent connectivity."
+            },
+            {
+                question: "What triggered the emergence of web services?",
+                options: [
+                    "Decline of the internet",
+                    "Evolution from mainframe to distributed systems",
+                    "Invention of assembly language",
+                    "Hardware miniaturization"
+                ],
+                correct: "b",
+                explanation: "Web services evolved from advancements like distributed computing and the internet."
+            },
+            {
+                question: "Which syntax rule is mandatory in XML?",
+                options: [
+                    "Attributes must use double quotes",
+                    "Tags are case-insensitive",
+                    "All elements must have closing tags",
+                    "Whitespace is ignored"
+                ],
+                correct: "c",
+                explanation: "XML requires every opening tag to have a corresponding closing tag."
+            },
+            {
+                question: "Thin clients differ from thick clients in that they:",
+                options: [
+                    "Run applications locally",
+                    "Rely on server-side processing",
+                    "Use dedicated GPUs",
+                    "Store large datasets"
+                ],
+                correct: "b",
+                explanation: "Thin clients offload processing to servers, accessing applications via browsers."
+            },
+            {
+                question: "Web services leverage XML primarily for:",
+                options: [
+                    "Storing binary data",
+                    "Platform-independent data exchange",
+                    "Graphical rendering",
+                    "Real-time video streaming"
+                ],
+                correct: "b",
+                explanation: "XML's text-based format ensures interoperability across systems."
+            },
+            {
+                question: "In client-server progression, browser-based clients succeeded:",
+                options: [
+                    "Dumb terminals",
+                    "Thick clients",
+                    "Mainframes",
+                    "Mobile clients"
+                ],
+                correct: "b",
+                explanation: "Browser-based clients replaced thick clients by centralizing software deployment."
+            },
+            {
+                question: "What validates an XML document's structure?",
+                options: [
+                    "XML Syntax",
+                    "XML Parser",
+                    "Validation Schema (e.g., XSD)",
+                    "HTML Converter"
+                ],
+                correct: "c",
+                explanation: "Schemas like XSD define rules for element hierarchy, data types, and constraints."
+            },
+            {
+                question: "Which architecture uses loosely coupled services?",
+                options: [
+                    "Mainframe Architecture",
+                    "SOA",
+                    "Client-Server Architecture",
+                    "Monolithic Architecture"
+                ],
+                correct: "b",
+                explanation: "SOA decomposes applications into independent, reusable services."
+            },
+            {
+                question: "The World Wide Web accelerated web services adoption by:",
+                options: [
+                    "Eliminating servers",
+                    "Standardizing HTTP/HTML",
+                    "Reducing internet usage",
+                    "Promoting proprietary protocols"
+                ],
+                correct: "b",
+                explanation: "HTTP/HTML provided universal standards for data exchange and accessibility."
+            },
+            {
+                question: "An XML element is defined by:",
+                options: [
+                    "A start tag, content, and end tag",
+                    "Only attributes",
+                    "Binary data",
+                    "JSON equivalents"
+                ],
+                correct: "a",
+                explanation: "Example: &lt;name&gt;John&lt;/name&gt; includes start tag, content, and end tag."
+            },
+            {
+                question: "Industry acceptance of web services was driven by:",
+                options: [
+                    "High implementation costs",
+                    "Closed ecosystems",
+                    "Demand for interoperability",
+                    "Limited internet access"
+                ],
+                correct: "c",
+                explanation: "Businesses needed cross-platform integration, which web services enabled."
+            },
+            {
+                question: "Distributed Architecture improved scalability by:",
+                options: [
+                    "Centralizing all resources",
+                    "Using isolated mainframes",
+                    "Deploying components across networked systems",
+                    "Eliminating clients"
+                ],
+                correct: "c",
+                explanation: "Workload distribution across multiple systems enhances scalability."
+            },
+            {
+                question: "Advanced XML concepts include:",
+                options: [
+                    "HTML tables",
+                    "Namespaces and XPath",
+                    "Python scripts",
+                    "SQL queries"
+                ],
+                correct: "b",
+                explanation: "Namespaces prevent element conflicts; XPath navigates XML nodes."
+            },
+            {
+                question: "Client-Server Architecture progression began with:",
+                options: [
+                    "Mobile Clients",
+                    "Thick Clients",
+                    "Dumb Terminals",
+                    "Thin Clients"
+                ],
+                correct: "c",
+                explanation: "Dumb terminals (input-only devices) were the earliest client model."
+            },
+            {
+                question: "XML data representation is:",
+                options: [
+                    "Non-hierarchical",
+                    "Tree-structured",
+                    "Exclusive to numerical data",
+                    "Unreadable by humans"
+                ],
+                correct: "b",
+                explanation: "XML organizes data in parent-child hierarchies (tree structure)."
+            },
+            {
+                question: "Web services applications typically focus on:",
+                options: [
+                    "Hardware manufacturing",
+                    "Service integration (e.g., APIs)",
+                    "Gaming consoles",
+                    "Local file storage"
+                ],
+                correct: "b",
+                explanation: "Web services enable API-driven integration (e.g., payment gateways, weather APIs)."
+            }
+        ];
+
+        // DOM Elements
+        const introScreen = document.querySelector('.intro-screen');
+        const quizContainer = document.querySelector('.quiz-container');
+        const resultsContainer = document.querySelector('.results-container');
+        const startBtn = document.querySelector('.start-btn');
+        const nextBtn = document.querySelector('.next-btn');
+        const restartBtn = document.querySelector('.restart-btn');
+        const questionEl = document.querySelector('.question');
+        const optionsEl = document.querySelector('.options');
+        const questionCountEl = document.querySelector('.question-count');
+        const progressBar = document.querySelector('.progress-bar');
+        const timerEl = document.querySelector('.timer');
+        const scoreEl = document.querySelector('.score');
+        const correctCountEl = document.querySelector('.correct-count');
+        const summaryEl = document.querySelector('.summary');
+
+        // Quiz state
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timer;
+        let timeLeft = 30;
+        let userAnswers = new Array(quizQuestions.length).fill(null);
+
+        // Start the quiz
+        startBtn.addEventListener('click', startQuiz);
+
+        // Next question
+        nextBtn.addEventListener('click', () => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizQuestions.length) {
+                showQuestion();
+            } else {
+                finishQuiz();
+            }
+        });
+
+        // Restart quiz
+        restartBtn.addEventListener('click', restartQuiz);
+
+        // Start quiz function
+        function startQuiz() {
+            introScreen.style.display = 'none';
+            quizContainer.style.display = 'block';
+            showQuestion();
+        }
+
+        // Show current question
+        function showQuestion() {
+            resetState();
+            const currentQuestion = quizQuestions[currentQuestionIndex];
+            questionEl.textContent = currentQuestion.question;
+            
+            // Update question count
+            questionCountEl.textContent = `Question ${currentQuestionIndex + 1} of ${quizQuestions.length}`;
+            
+            // Update progress bar
+            progressBar.style.width = `${((currentQuestionIndex + 1) / quizQuestions.length) * 100}%`;
+            
+            // Create options
+            currentQuestion.options.forEach((option, index) => {
+                const optionEl = document.createElement('div');
+                optionEl.classList.add('option');
+                optionEl.dataset.option = String.fromCharCode(65 + index); // A, B, C, D
+                optionEl.dataset.value = String.fromCharCode(97 + index); // a, b, c, d
+                optionEl.textContent = option;
+                optionEl.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(optionEl);
+            });
+            
+            // Start timer
+            startTimer();
+        }
+
+        // Reset state for new question
+        function resetState() {
+            clearInterval(timer);
+            timeLeft = 30;
+            timerEl.textContent = `${timeLeft}s`;
+            nextBtn.style.display = 'none';
+            optionsEl.innerHTML = '';
+        }
+
+        // Select answer
+        function selectAnswer(e) {
+            clearInterval(timer);
+            const selectedOption = e.target;
+            const selectedValue = selectedOption.dataset.value;
+            
+            // Save user answer
+            userAnswers[currentQuestionIndex] = selectedValue;
+            
+            // Disable all options
+            document.querySelectorAll('.option').forEach(option => {
+                option.style.pointerEvents = 'none';
+            });
+            
+            // Show next button
+            nextBtn.style.display = 'block';
+        }
+
+        // Timer function
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = `${timeLeft}s`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    userAnswers[currentQuestionIndex] = null; // No answer selected
+                    document.querySelectorAll('.option').forEach(option => {
+                        option.style.pointerEvents = 'none';
+                    });
+                    nextBtn.style.display = 'block';
+                }
+            }, 1000);
+        }
+
+        // Finish quiz
+        function finishQuiz() {
+            clearInterval(timer);
+            quizContainer.style.display = 'none';
+            resultsContainer.style.display = 'block';
+            
+            // Calculate score
+            score = 0;
+            quizQuestions.forEach((question, index) => {
+                if (userAnswers[index] === question.correct) {
+                    score++;
+                }
+            });
+            
+            const percentage = Math.round((score / quizQuestions.length) * 100);
+            scoreEl.textContent = `${percentage}%`;
+            correctCountEl.textContent = score;
+            
+            // Generate summary
+            generateSummary();
+        }
+
+        // Generate summary of answers
+        function generateSummary() {
+            summaryEl.innerHTML = '<h3>Question Review:</h3>';
+            
+            quizQuestions.forEach((question, index) => {
+                const summaryItem = document.createElement('div');
+                summaryItem.classList.add('summary-item');
+                
+                const userAnswer = userAnswers[index];
+                const isCorrect = userAnswer === question.correct;
+                
+                summaryItem.innerHTML = `
+                    <div class="summary-question">${index + 1}. ${question.question}</div>
+                    <div>Your answer: <span class="user-answer ${isCorrect ? 'correct' : 'incorrect'}">${
+                        userAnswer ? question.options[userAnswer.charCodeAt(0) - 97] : 'No answer'
+                    }</span></div>
+                    <div>Correct answer: <span class="correct-answer">${question.options[question.correct.charCodeAt(0) - 97]}</span></div>
+                    <div class="explanation">Explanation: ${question.explanation}</div>
+                `;
+                
+                summaryEl.appendChild(summaryItem);
+            });
+        }
+
+        // Restart quiz
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers = new Array(quizQuestions.length).fill(null);
+            
+            resultsContainer.style.display = 'none';
+            quizContainer.style.display = 'block';
+            
+            showQuestion();
+        }
+    </script>
+</body>
+</html>
